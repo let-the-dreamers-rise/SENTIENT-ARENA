@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentient Arena — Test Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a1a;
+            color: #e0e0ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Header ──────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, #0d0d2b 0%, #1a0a2e 50%, #0a1628 100%);
+            border-bottom: 2px solid #00ffff33;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 28px;
+            background: linear-gradient(90deg, #00ffff, #aa44ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px #00ffff44;
+        }
+        .status-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: #00ff8822;
+            border: 1px solid #00ff8855;
+            font-size: 13px;
+        }
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ─── Layout ──────────────────────────────────── */
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            padding: 20px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ─── Sidebar: Character Cards ────────────────── */
+        .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+        .char-card {
+            background: #12122a;
+            border: 1px solid #ffffff15;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .char-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--char-color);
+            opacity: 0.7;
+        }
+        .char-card:hover, .char-card.active {
+            border-color: var(--char-color);
+            box-shadow: 0 0 20px var(--char-color-glow);
+            transform: translateX(4px);
+        }
+        .char-card .name {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--char-color);
+            margin-bottom: 4px;
+        }
+        .char-card .class-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        /* Health bar */
+        .hp-bar-container {
+            background: #1a1a35;
+            border-radius: 6px;
+            height: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+        .hp-bar {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #ff4444, #00ff88);
+        }
+
+        /* Emotion bars */
+        .emotion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .emotion-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+        }
+        .emotion-icon { font-size: 13px; }
+        .emotion-bar-mini {
+            flex: 1;
+            background: #1a1a35;
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .emotion-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .emotion-val { font-size: 10px; color: #666; width: 28px; text-align: right; }
+
+        /* ─── Main Panel ──────────────────────────────── */
+        .main-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        .panel {
+            background: #12122a;
+            border: 1px solid #ffffff10;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 14px 20px;
+            font-family: 'Orbitron', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            background: #0d0d25;
+            border-bottom: 1px solid #ffffff10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel-body { padding: 20px; }
+
+        /* ─── Dialogue Panel ──────────────────────────── */
+        .dialogue-log {
+            max-height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding-right: 8px;
+        }
+        .dialogue-log::-webkit-scrollbar { width: 4px; }
+        .dialogue-log::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+        .msg {
+            padding: 10px 14px;
+            border-radius: 10px;
+            max-width: 85%;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: msg-in 0.3s ease;
+        }
+        @keyframes msg-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg.player {
+            align-self: flex-end;
+            background: #1a2a4a;
+            border: 1px solid #3a5a8a;
+        }
+        .msg.character {
+            align-self: flex-start;
+            background: #1a1a35;
+            border-left: 3px solid var(--char-color, #00ffff);
+        }
+        .msg .speaker {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--char-color, #00ffff);
+            margin-bottom: 4px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .msg-input {
+            flex: 1;
+            background: #0d0d25;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #e0e0ff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .msg-input:focus { border-color: #00ffff; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00cccc, #00aaff);
+            color: #000;
+        }
+        .btn-primary:hover { box-shadow: 0 0 20px #00ffff55; transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #cc4444, #ff6644);
+            color: #fff;
+        }
+        .btn-secondary {
+            background: #1a1a35;
+            color: #aaa;
+            border: 1px solid #333;
+        }
+        .btn-secondary:hover { border-color: #00ffff55; color: #ccc; }
+
+        /* ─── API Tester Grid ─────────────────────────── */
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .api-btn {
+            padding: 14px;
+            background: #0d0d25;
+            border: 1px solid #ffffff15;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .api-btn:hover {
+            border-color: #00ffff55;
+            background: #151535;
+        }
+        .api-btn .endpoint {
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            color: #00ffff;
+            margin-bottom: 4px;
+        }
+        .api-btn .desc { font-size: 12px; color: #888; }
+
+        /* ─── Response Log ────────────────────────────── */
+        .response-log {
+            background: #0a0a18;
+            border: 1px solid #ffffff08;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: #88ff88;
+        }
+
+        /* ─── Boss Panel ──────────────────────────────── */
+        .boss-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .boss-stat {
+            font-size: 13px;
+        }
+        .boss-stat .label { color: #666; font-size: 11px; text-transform: uppercase; }
+        .boss-stat .value { font-family: 'Orbitron', monospace; color: #ff4488; }
+
+        /* ─── Loading ─────────────────────────────────── */
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid #333;
+            border-top-color: #00ffff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text { color: #666; font-style: italic; font-size: 13px; }
+
+        /* ─── Audio Player ────────────────────────────── */
+        audio { width: 100%; margin-top: 8px; height: 32px; }
+
+        /* ─── Responsive ──────────────────────────────── */
+        @media (max-width: 900px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚔ SENTIENT ARENA</h1>
+    <div class="status-badge" id="serverStatus">
+        <div class="status-dot"></div>
+        <span>Checking server...</span>
+    </div>
+</div>
+
+<div class="container">
+    <!-- SIDEBAR: Character Cards -->
+    <div class="sidebar" id="charSidebar">
+        <!-- Populated by JS -->
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div class="main-panel">
+
+        <!-- Dialogue Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                💬 <span id="dialogueTitle">Select a character to chat</span>
+            </div>
+            <div class="panel-body">
+                <div class="dialogue-log" id="dialogueLog">
+                    <div class="msg character" style="--char-color: #555;">
+                        <div class="speaker">System</div>
+                        Click a character card to begin talking.
+                    </div>
+                </div>
+                <div class="input-row">
+                    <input type="text" class="msg-input" id="playerInput" placeholder="Type your message..."
+                           disabled onkeydown="if(event.key==='Enter') sendMessage()">
+                    <button class="btn btn-primary" id="sendBtn" disabled onclick="sendMessage()">Send</button>
+                </div>
+                <audio id="voicePlayer" controls style="display:none"></audio>
+            </div>
+        </div>
+
+        <!-- API Tester -->
+        <div class="panel">
+            <div class="panel-header">🔌 API Tester</div>
+            <div class="panel-body">
+                <div class="api-grid">
+                    <div class="api-btn" onclick="testAPI('health')">
+                        <div class="endpoint">GET /health</div>
+                        <div class="desc">Health check</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('characters')">
+                        <div class="endpoint">GET /state/characters</div>
+                        <div class="desc">All characters</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('boss')">
+                        <div class="endpoint">GET /state/boss</div>
+                        <div class="desc">Boss state</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('tendencies')">
+                        <div class="endpoint">GET /state/tendencies</div>
+                        <div class="desc">Player tendencies</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('bossAdapt')">
+                        <div class="endpoint">POST /boss/adapt</div>
+                        <div class="desc">Trigger boss adaptation</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('emotionRecalib')">
+                        <div class="endpoint">POST /emotion/recalibrate</div>
+                        <div class="desc">Recalibrate emotions</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('abilityGen')">
+                        <div class="endpoint">POST /ability/generate</div>
+                        <div class="desc">Generate new ability</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('ruleMutate')">
+                        <div class="endpoint">POST /rule/mutate</div>
+                        <div class="desc">Mutate combat rule</div>
+                    </div>
+                    <div class="api-btn" onclick="testAPI('reset')">
+                        <div class="endpoint">POST /state/reset</div>
+                        <div class="desc">Reset all state</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Response Log -->
+        <div class="panel">
+            <div class="panel-header">📋 Response Log</div>
+            <div class="panel-body">
+                <div class="response-log" id="responseLog">Awaiting API calls...</div>
+            </div>
+        </div>
+
+        <!-- Boss Panel -->
+        <div class="panel">
+            <div class="panel-header">👾 Boss: Nexus Prime</div>
+            <div class="panel-body">
+                <div class="boss-info" id="bossInfo">
+                    <div class="boss-stat"><div class="label">HP</div><div class="value" id="bossHP">—</div></div>
+                    <div class="boss-stat"><div class="label">Phase</div><div class="value" id="bossPhase">—</div></div>
+                    <div class="boss-stat"><div class="label">Strategy</div><div class="value" id="bossStrategy">—</div></div>
+                    <div class="boss-stat"><div class="label">Difficulty</div><div class="value" id="bossDifficulty">—</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const BASE = 'http://localhost:8000';
+let selectedChar = null;
+const charColors = { VEX: '#00ffff', LYRA: '#aa44ff', KAEL: '#4488ff' };
+const charGlows = { VEX: '#00ffff33', LYRA: '#aa44ff33', KAEL: '#4488ff33' };
+
+// ─── Server Health Check ─────────────────────────────────
+async function checkServer() {
+    const badge = document.getElementById('serverStatus');
+    try {
+        const r = await fetch(BASE + '/health');
+        if (r.ok) {
+            badge.innerHTML = '<div class="status-dot"></div><span>Backend Online</span>';
+            badge.style.background = '#00ff8822';
+            badge.style.borderColor = '#00ff8855';
+            loadCharacters();
+            loadBoss();
+        }
+    } catch {
+        badge.innerHTML = '<span style="color:#ff4444">⚠ Backend Offline</span>';
+        badge.style.background = '#ff444422';
+        badge.style.borderColor = '#ff444455';
+    }
+}
+
+// ─── Load Characters ─────────────────────────────────────
+async function loadCharacters() {
+    try {
+        const r = await fetch(BASE + '/api/state/characters');
+        const data = await r.json();
+        renderCharCards(data.characters);
+    } catch (e) { console.error('Failed to load characters', e); }
+}
+
+function renderCharCards(chars) {
+    const sidebar = document.getElementById('charSidebar');
+    sidebar.innerHTML = '';
+    chars.forEach(c => {
+        const id = c.character_id;
+        const color = charColors[id] || '#00ffff';
+        const glow = charGlows[id] || '#00ffff33';
+        const em = c.emotions || {};
+        const hp = c.base_stats;
+        const hpPct = hp.max_health > 0 ? (hp.current_health / hp.max_health * 100) : 100;
+
+        const card = document.createElement('div');
+        card.className = 'char-card' + (selectedChar === id ? ' active' : '');
+        card.style.setProperty('--char-color', color);
+        card.style.setProperty('--char-color-glow', glow);
+        card.onclick = () => selectCharacter(id, c.display_name, color);
+
+        card.innerHTML = `
+            <div class="name">${c.display_name}</div>
+            <div class="class-label">${c.class} — ${(c.personality||{}).archetype||''}</div>
+            <div class="hp-bar-container"><div class="hp-bar" style="width:${hpPct}%"></div></div>
+            <div class="emotion-grid">
+                ${emotionBar('🔥', 'Conf', em.confidence, '#00ff88')}
+                ${emotionBar('⚡', 'Stress', em.stress, '#ffaa00')}
+                ${emotionBar('🤝', 'Trust', em.trust_in_team, '#4488ff')}
+                ${emotionBar('💪', 'Morale', em.morale, '#aa44ff')}
+            </div>
+        `;
+        sidebar.appendChild(card);
+    });
+}
+
+function emotionBar(icon, label, val, color) {
+    const pct = ((val || 0.5) * 100).toFixed(0);
+    return `<div class="emotion-item">
+        <span class="emotion-icon">${icon}</span>
+        <div class="emotion-bar-mini"><div class="emotion-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="emotion-val">${pct}%</span>
+    </div>`;
+}
+
+function selectCharacter(id, name, color) {
+    selectedChar = id;
+    document.getElementById('dialogueTitle').textContent = `Talking to ${name}`;
+    document.getElementById('dialogueTitle').style.color = color;
+    document.getElementById('playerInput').disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('playerInput').focus();
+
+    // Clear dialogue log
+    const log = document.getElementById('dialogueLog');
+    log.innerHTML = `<div class="msg character" style="--char-color:${color}">
+        <div class="speaker">${name}</div>
+        <em>*${name} turns to face you*</em>
+    </div>`;
+
+    // Refresh card highlight
+    document.querySelectorAll('.char-card').forEach((c, i) => {
+        c.classList.toggle('active', c.querySelector('.name').textContent === name);
+    });
+}
+
+// ─── Send Dialogue ───────────────────────────────────────
+async function sendMessage() {
+    const input = document.getElementById('playerInput');
+    const msg = input.value.trim();
+    if (!msg || !selectedChar) return;
+    input.value = '';
+
+    const log = document.getElementById('dialogueLog');
+    log.innerHTML += `<div class="msg player"><div class="speaker">You</div>${msg}</div>`;
+
+    // Loading
+    const loadId = 'load-' + Date.now();
+    log.innerHTML += `<div class="msg character" id="${loadId}" style="--char-color:${charColors[selectedChar]}">
+        <div class="spinner"></div> <span class="loading-text">Thinking...</span>
+    </div>`;
+    log.scrollTop = log.scrollHeight;
+
+    try {
+        const r = await fetch(BASE + '/api/dialogue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ character_id: selectedChar, player_message: msg })
+        });
+        const data = await r.json();
+
+        const loadEl = document.getElementById(loadId);
+        if (loadEl) {
+            loadEl.innerHTML = `<div class="speaker">${selectedChar}</div>${data.reply_text || 'No response.'}`;
+        }
+
+        // Play audio if available
+        if (data.audio_url) {
+            const audio = document.getElementById('voicePlayer');
+            audio.src = BASE + data.audio_url;
+            audio.style.display = 'block';
+            audio.play();
+        }
+
+        // Refresh character state
+        loadCharacters();
+        logResponse('POST /api/dialogue', data);
+    } catch (e) {
+        const loadEl = document.getElementById(loadId);
+        if (loadEl) loadEl.innerHTML = `<span style="color:#ff4444">Error: ${e.message}</span>`;
+    }
+    log.scrollTop = log.scrollHeight;
+}
+
+// ─── Load Boss ───────────────────────────────────────────
+async function loadBoss() {
+    try {
+        const r = await fetch(BASE + '/api/state/boss');
+        const b = await r.json();
+        document.getElementById('bossHP').textContent = `${b.base_stats.current_health}/${b.base_stats.max_health}`;
+        document.getElementById('bossPhase').textContent = b.phase;
+        document.getElementById('bossStrategy').textContent = b.adaptation?.current_strategy || 'balanced';
+        document.getElementById('bossDifficulty').textContent = (b.adaptation?.difficulty_scalar || 1.0).toFixed(2);
+    } catch(e) { console.error(e); }
+}
+
+// ─── API Tester ──────────────────────────────────────────
+async function testAPI(type) {
+    let url, opts = {};
+    switch(type) {
+        case 'health':
+            url = '/health'; break;
+        case 'characters':
+            url = '/api/state/characters'; break;
+        case 'boss':
+            url = '/api/state/boss'; break;
+        case 'tendencies':
+            url = '/api/state/tendencies'; break;
+        case 'bossAdapt':
+            url = '/api/boss/adapt';
+            opts = { method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    player_tendencies: { aggression_frequency: 0.7, defensive_frequency: 0.2,
+                        support_frequency: 0.1, most_targeted_character: 'VEX',
+                        most_used_ability_type: 'offensive' }
+                })};
+            break;
+        case 'emotionRecalib':
+            url = '/api/emotion/recalibrate';
+            opts = { method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ character_id: selectedChar || 'VEX', battle_result: 'win' })};
+            break;
+        case 'abilityGen':
+            url = '/api/ability/generate';
+            opts = { method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ character_id: selectedChar || 'VEX' })};
+            break;
+        case 'ruleMutate':
+            url = '/api/rule/mutate';
+            opts = { method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ turn_number: 5, boss_strategy: 'balanced',
+                    team_avg_confidence: 0.6, team_avg_stress: 0.4, team_avg_morale: 0.65 })};
+            break;
+        case 'reset':
+            url = '/api/state/reset';
+            opts = { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' };
+            break;
+    }
+
+    try {
+        const r = await fetch(BASE + url, opts);
+        const data = await r.json();
+        logResponse(`${opts.method||'GET'} ${url}`, data);
+        if (type === 'boss' || type === 'bossAdapt') loadBoss();
+        if (type === 'characters' || type === 'emotionRecalib' || type === 'reset') loadCharacters();
+    } catch(e) {
+        logResponse(`${opts.method||'GET'} ${url}`, { error: e.message });
+    }
+}
+
+function logResponse(endpoint, data) {
+    const log = document.getElementById('responseLog');
+    const time = new Date().toLocaleTimeString();
+    const json = JSON.stringify(data, null, 2);
+    log.textContent = `[${time}] ${endpoint}\n${json}`;
+}
+
+// ─── Init ────────────────────────────────────────────────
+checkServer();
+setInterval(checkServer, 30000);
+</script>
+</body>
+</html>
