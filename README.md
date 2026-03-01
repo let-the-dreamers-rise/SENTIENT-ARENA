@@ -35,7 +35,7 @@ Squad members aren't just hit points. They are driven by an emotional state mach
 The boss (Nexus Prime) doesn't use a scripted rotation. The `API` tracks your playstyle—how often you use support, how aggressive you are, and which characters you rely on. Between waves, Mistral analyzes these tendencies and generates a unique **Threat Strategy**, mutating the boss's behavior to specifically counter your playstyle.
 
 ### 4. Context-Aware Banter
-During combat, characters organically react to the battle state. Mistral generates dialogue based on what just happened (e.g., getting critically hit by the boss, or landing a 2x combo). This dialogue is then piped through a **Character Voice System** (using browser TTS/ElevenLabs) with distinct pitch and tone for every character.
+During combat, characters organically react to the battle state. Mistral generates dialogue based on what just happened (e.g., getting critically hit by the boss, or landing a 2x combo). This dialogue is then piped through a **Character Voice System** (ElevenLabs) with distinct pitch and tone for every character.
 
 ---
 
@@ -90,6 +90,7 @@ Sentient Arena is designed to run locally with smart fallbacks. It is fully play
    Create a `.env` file in the root directory:
    ```env
    MISTRAL_API_KEY=your_mistral_api_key_here
+   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
    HOST=0.0.0.0
    PORT=8000
    ```
@@ -114,4 +115,3 @@ Sentient Arena is designed to run locally with smart fallbacks. It is fully play
 5. **Synapse Link:** Look for the glowing cyan button above the ability tray. Click it, type a tactical command, and watch Mistral build your new arsenal.
 
 ---
-*Built for the AI Hackathon 2026.*
